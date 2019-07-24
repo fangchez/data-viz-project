@@ -1,0 +1,178 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" href="styles.css">
+
+<body onload='init()'>
+
+<nav class="navbar navbar-expand navbar-dark bg-primary">
+  <a class="navbar-brand" href="index.html">Home</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor02" aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarColor02">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="page1.html">Fuel <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="page2.html">Engine</a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="page3.html">Make</a>
+      </li>
+    </ul>
+    <span class="navbar-text">
+      CS 498 DDV - Fangcheng Zhu
+    </span>
+  </div>
+</nav>
+
+<br>
+
+<div class="container">
+	<div class="row">
+		<div class="col-md">
+			<svg width=600 height=600></svg>
+		</div>
+		
+		<div class="col-md">
+			<button type="button" class="btn btn-info" onclick="select(true)">Select All</button>
+
+			<button  type="button" class="btn btn-secondary"onclick="select(false)">Unselect All</button>
+
+			<div class="form-check" id="car-brand"></div>
+		</div>
+	</div>
+</div>
+
+
+<script>
+var data;
+var brands;
+
+function change_fuel() {
+	d3.select("svg").html = "";
+
+  render();
+}
+
+async function init() {
+	data = await d3.csv(
+	'https://flunky.github.io/cars2017.csv');
+
+	brands = new Set();
+	for (var i = 0; i < data.length; i++) {
+		brands.add(data[i].Make);
+	}
+
+	for (var brand of brands) {
+		var line = document.createElement("div");
+		line.class = "form-check";
+
+		var label= document.createElement("label");
+		label.innerHTML = brand;
+		label.class = "form-check-label";
+
+		var checkbox = document.createElement("input");
+		checkbox.type = "checkbox";
+		checkbox.value = brand;
+		checkbox.id = brand;
+		checkbox.class = "form-check-input";
+		checkbox.onclick = function() {
+			render();
+		}
+		
+		line.appendChild(checkbox);
+		line.appendChild(label);
+
+		document.getElementById("car-brand").appendChild(line);
+	}
+
+	render();
+}
+
+function render() {	
+	var x = d3.scaleLog()
+	.base(10)
+	.domain([10,150])
+	.range([0,500]);
+
+	var y = d3.scaleLog()
+	.base(10)
+	.domain([10,150])
+	.range([500, 0]);
+
+	var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+	d3.select("svg")
+	.append("g")
+	.attr("transform", "translate(50,50)")
+	.selectAll("circle")
+	.data(data)
+	.enter()
+	.append("circle")
+	.attr("cx", function(d) {return x(d.AverageCityMPG);})
+	.attr("cy", function(d) {return y(d.AverageHighwayMPG);})
+	.attr("r", 2)
+	.attr("fill", function(d) {if (document.getElementById(d.Make).checked) {return "red";} else {return "white";}})
+	// .attr("opacity", function(d) {if (document.getElementById(d.Make).checked) {return 1} else {return 0}})
+	.attr("stroke", function(d) {return "black"})
+	.on("mouseover", function(d) {		
+    div.transition()		
+       .duration(200)		
+       .style("opacity", .9);		
+    div.html(
+    	"<b>Make</b>: " + d.Make + "<br/>" + 
+    	"<b>Fuel</b>: " + d.Fuel + "<br/>" + 
+    	"<b>Engine Cylinders</b>: " + d.EngineCylinders + "<br/>" + 
+    	"<b>Avg MPG</b>: " + d.AverageCityMPG + " (city) / " + d.AverageHighwayMPG + " (highway)"
+    	)	
+       .style("left", (d3.event.pageX) + "px")		
+       .style("top", (d3.event.pageY - 28) + "px");	
+  })					
+  .on("mouseout", function(d) {		
+    div.transition()		
+       .duration(500)		
+       .style("opacity", 0);	
+  });
+
+	d3.select("svg").append("g")
+	.attr("transform", "translate(50,50)")
+	.call(d3.axisLeft(y).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
+
+	d3.select("svg").append("g")
+	.attr("transform", "translate(50,550)")
+	.call(d3.axisBottom(x).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
+
+	// text label for the x axis
+  d3.select("svg").append("text")             
+      .attr("transform",
+            "translate(300,585)")
+      .style("text-anchor", "middle")
+      .text("Avg City MPG");
+
+  // text label for the y axis
+  d3.select("svg").append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0)
+      .attr("x",0 - 300)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Avg Highway MPG");
+}
+
+function select(isSelect) {
+	for (var brand of brands) {
+		document.getElementById(brand).checked = isSelect;
+	}
+	render();
+}
+
+</script>
+</body>
+</html>

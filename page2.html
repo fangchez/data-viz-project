@@ -1,0 +1,189 @@
+<html>
+<script src='https://d3js.org/d3.v5.min.js'></script>
+
+<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+<link rel="stylesheet" href="styles.css">
+
+<body onload='init()'>
+	
+<nav class="navbar navbar-expand navbar-dark bg-primary">
+  <a class="navbar-brand" href="index.html">Home</a>
+  <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarColor02" aria-controls="navbarColor02" aria-expanded="false" aria-label="Toggle navigation">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+
+  <div class="collapse navbar-collapse" id="navbarColor02">
+    <ul class="navbar-nav mr-auto">
+      <li class="nav-item">
+        <a class="nav-link" href="page1.html">Fuel <span class="sr-only">(current)</span></a>
+      </li>
+      <li class="nav-item active">
+        <a class="nav-link" href="page2.html">Engine</a>
+      </li>
+      <li class="nav-item">
+        <a class="nav-link" href="page3.html">Make</a>
+      </li>
+    </ul>
+    <span class="navbar-text">
+      CS 498 DDV - Fangcheng Zhu
+    </span>
+  </div>
+</nav>
+
+<br>
+
+<div class="container">
+	<div class="row">
+		<div class="col-md">
+			<svg width=600 height=600></svg>
+		</div>
+		
+		<div class="col-md">
+			<h4>Select the number of engine cylinders:</h4>
+			<section class="range-slider">
+			  <span class="rangeValues"></span>
+			  <input value="0" min="0" max="12" step="1" type="range" id="cylinder-one" oninput="change_cylinder()">
+			  <input value="12" min="0" max="12" step="1" type="range" id="cylinder-sec" oninput="change_cylinder()">
+			</section>
+			<p id="display"></p>
+		</div>
+	</div>
+</div>
+
+<script>
+var data;
+
+function change_cylinder() {
+	d3.select("svg").html = "";
+
+  var first = parseInt(document.getElementById("cylinder-one").value);
+  var second = parseInt(document.getElementById("cylinder-sec").value);
+  
+  if (first <= second) {
+  	render(data, first, second);
+  } else {
+  	render(data, second, first);
+  }
+}
+
+async function init() {
+	data = await d3.csv(
+	'https://flunky.github.io/cars2017.csv');
+
+	render(data, 0, 12);
+}
+
+function render(data, lower, upper) {
+	document.getElementById("display").innerHTML = "Cylinders Min: " + lower + " Max: " + upper;
+
+	var x = d3.scaleLog()
+	.base(10)
+	.domain([10,150])
+	.range([0,500]);
+
+	var y = d3.scaleLog()
+	.base(10)
+	.domain([10,150])
+	.range([500, 0]);
+
+	var div = d3.select("body").append("div")	
+    .attr("class", "tooltip")				
+    .style("opacity", 0);
+
+	d3.select("svg")
+	.append("g")
+	.attr("transform", "translate(50,50)")
+	.selectAll("circle")
+	.data(data)
+	.enter()
+	.append("circle")
+	.attr("cx", function(d) {return x(d.AverageCityMPG);})
+	.attr("cy", function(d) {return y(d.AverageHighwayMPG);})
+	.attr("r", 2)
+	.attr("fill", function(d) {if (lower <= d.EngineCylinders && d.EngineCylinders <= upper) {return "red"} else {return "white"}})
+	.on("mouseover", function(d) {		
+    div.transition()		
+       .duration(200)		
+       .style("opacity", .9);		
+    div.html(
+    	"<b>Make</b>: " + d.Make + "<br/>" + 
+    	"<b>Fuel</b>: " + d.Fuel + "<br/>" + 
+    	"<b>Engine Cylinders</b>: " + d.EngineCylinders + "<br/>" + 
+    	"<b>Avg MPG</b>: " + d.AverageCityMPG + " (city) / " + d.AverageHighwayMPG + " (highway)"
+    	)	
+       .style("left", (d3.event.pageX) + "px")		
+       .style("top", (d3.event.pageY - 28) + "px");	
+  })					
+  .on("mouseout", function(d) {		
+    div.transition()		
+       .duration(500)		
+       .style("opacity", 0);	
+  });
+
+	d3.select("svg").append("g")
+	.attr("transform", "translate(50,50)")
+	.call(d3.axisLeft(y).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
+
+	d3.select("svg").append("g")
+	.attr("transform", "translate(50,550)")
+	.call(d3.axisBottom(x).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
+
+	// text label for the x axis
+  d3.select("svg").append("text")             
+      .attr("transform",
+            "translate(300,585)")
+      .style("text-anchor", "middle")
+      .text("Avg City MPG");
+
+  // text label for the y axis
+  d3.select("svg").append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0)
+      .attr("x",0 - 300)
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Avg Highway MPG");
+
+  // add annotations
+  d3.select("svg").append("svg:defs").append("svg:marker")
+    .attr("id", "triangle")
+    .attr("refX", 6)
+    .attr("refY", 6)
+    .attr("markerWidth", 30)
+    .attr("markerHeight", 30)
+    .attr("markerUnits","userSpaceOnUse")
+    .attr("orient", "auto")
+    .append("path")
+    .attr("d", "M 0 0 12 6 0 12 3 6")
+    .style("fill", "black");
+
+  d3.select("svg")
+    .append("line")
+    .attr("x1", 450)
+    .attr("y1", 200)
+    .attr("x2", 200)
+    .attr("y2", 400)
+    .attr("stroke-width", 1)
+    .attr("stroke", "black")
+    .attr("marker-end", "url(#triangle)");
+
+  d3.select("svg").append("text")             
+      .attr("transform",
+            "translate(175,450)")
+      .style("text-anchor", "middle")
+      .text("More cylinders");
+
+  d3.select("svg").append("text")             
+      .attr("transform",
+            "translate(525,175)")
+      .style("text-anchor", "middle")
+      .text("Fewer cylinders");
+}
+
+function select(fuel) {
+  render(data, fuel);
+}
+
+</script>
+</body>
+</html>
