@@ -4,7 +4,7 @@
 <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
 <link rel="stylesheet" href="styles.css">
 
-<body onload='init()'>
+<body>
 
 <nav class="navbar navbar-expand navbar-dark bg-primary">
   <a class="navbar-brand active" href="index.html">Home</a>
@@ -34,104 +34,14 @@
 
 <div class="container">
 	<div class="row">
-		<div class="col-md">
-			<svg width=600 height=600></svg>
-		</div>
-
-    <div class="col-md">
+    <div class="col-md-6">
       <h2>2017 Automobile Fuel Efficiency Data Visualization</h2>
       <p>
-        This narrative visualization is an interactive slideshow for the 2017 automobile manufacturer dataset (https://flunky.github.io/cars2017.csv). Users are able to explore what factors contribute to automobiles' fuel efficiency using 3 different filters: by fuel type, by engine size, and by makes. To begin the slideshow, click through Fuel -> Engine -> Make sections from the Navgation bar.
+        This narrative visualization is an interactive slideshow for the 2017 automobile manufacturer dataset (<a href="https://flunky.github.io/cars2017.csv">https://flunky.github.io/cars2017.csv</a>). Users are able to explore what factors contribute to automobiles' fuel efficiency using 3 different filters: by fuel type, by engine size, and by makes. To begin the slideshow, click through Fuel -> Engine -> Make sections from the Navgation bar.
       </p>
     </div>
 	</div>
 </div>
 
-<script>
-var data;
-
-
-async function init() {
-	data = await d3.csv(
-	'https://flunky.github.io/cars2017.csv');
-
-	render(data);
-}
-
-function render(data) {
-	var x = d3.scaleLog()
-	.base(10)
-	.domain([10,150])
-	.range([0,500]);
-
-	var y = d3.scaleLog()
-	.base(10)
-	.domain([10,150])
-	.range([500, 0]);
-
-	var div = d3.select("body").append("div")	
-    .attr("class", "tooltip")				
-    .style("opacity", 0);
-
-	d3.select("svg")
-	.append("g")
-	.attr("transform", "translate(50,50)")
-	.selectAll("circle")
-	.data(data)
-	.enter()
-	.append("circle")
-	.attr("cx", function(d) {return x(d.AverageCityMPG);})
-	.attr("cy", function(d) {return y(d.AverageHighwayMPG);})
-	.attr("r", 2)
-	.attr("fill", function(d) {return "white"})
-	.on("mouseover", function(d) {		
-    div.transition()		
-       .duration(200)		
-       .style("opacity", .9);		
-    div.html(
-    	"<b>Make</b>: " + d.Make + "<br/>" + 
-    	"<b>Fuel</b>: " + d.Fuel + "<br/>" + 
-    	"<b>Engine Cylinders</b>: " + d.EngineCylinders + "<br/>" + 
-    	"<b>Avg MPG</b>: " + d.AverageCityMPG + " (city) / " + d.AverageHighwayMPG + " (highway)"
-    	)	
-       .style("left", (d3.event.pageX) + "px")		
-       .style("top", (d3.event.pageY - 28) + "px");	
-  })					
-  .on("mouseout", function(d) {		
-    div.transition()		
-       .duration(500)		
-       .style("opacity", 0);	
-  });
-
-	d3.select("svg").append("g")
-	.attr("transform", "translate(50,50)")
-	.call(d3.axisLeft(y).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
-
-	d3.select("svg").append("g")
-	.attr("transform", "translate(50,550)")
-	.call(d3.axisBottom(x).tickValues([10, 20, 50, 100]).tickFormat(d3.format("~s")));
-
-	// text label for the x axis
-  d3.select("svg").append("text")             
-      .attr("transform",
-            "translate(300,585)")
-      .style("text-anchor", "middle")
-      .text("Avg City MPG");
-
-  // text label for the y axis
-  d3.select("svg").append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 0)
-      .attr("x",0 - 300)
-      .attr("dy", "1em")
-      .style("text-anchor", "middle")
-      .text("Avg Highway MPG");
-}
-
-function select(fuel) {
-  render(data, fuel);
-}
-
-</script>
 </body>
 </html>

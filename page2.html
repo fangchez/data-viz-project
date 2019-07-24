@@ -39,7 +39,8 @@
 		</div>
 		
 		<div class="col-md">
-			<h4>Select the number of engine cylinders:</h4>
+      <h3>Engine size vs. Fuel efficiency</h3>
+			<h5>Select the number of engine cylinders:</h5>
 			<section class="range-slider">
 			  <span class="rangeValues"></span>
 			  <input value="0" min="0" max="12" step="1" type="range" id="cylinder-one" oninput="change_cylinder()">
@@ -159,10 +160,10 @@ function render(data, lower, upper) {
 
   d3.select("svg")
     .append("line")
-    .attr("x1", 450)
-    .attr("y1", 200)
-    .attr("x2", 200)
-    .attr("y2", 400)
+    .attr("x1", 200)
+    .attr("y1", 400)
+    .attr("x2", 450)
+    .attr("y2", 200)
     .attr("stroke-width", 1)
     .attr("stroke", "black")
     .attr("marker-end", "url(#triangle)");
@@ -178,6 +179,12 @@ function render(data, lower, upper) {
             "translate(525,175)")
       .style("text-anchor", "middle")
       .text("Fewer cylinders");
+
+  d3.select("svg").append("text")             
+      .attr("transform",
+            "translate(425,325)")
+      .style("text-anchor", "middle")
+      .text("Increasing fuel efficiency");
 }
 
 function select(fuel) {

@@ -39,7 +39,8 @@
 		</div>
 		
 		<div class="col-md">
-			<h4>Select fuel type:</h4>
+      <h3>Fuel type vs. Fuel efficiency</h3>
+			<h5>Select fuel type:</h5>
 			<select onchange="change_fuel()" id="fuel">
 			  <option value="Gasoline" selected>Gasoline</option>
 			  <option value="Diesel">Diesel</option>
@@ -176,6 +177,12 @@ function render(data, fuel) {
             "translate(500,200)")
       .style("text-anchor", "middle")
       .text("Electricity");
+
+  d3.select("svg").append("text")             
+      .attr("transform",
+            "translate(425,325)")
+      .style("text-anchor", "middle")
+      .text("Increasing fuel efficiency");
 }
 
 function select(fuel) {
